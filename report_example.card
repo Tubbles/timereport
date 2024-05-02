@@ -1,0 +1,30 @@
+# This is a comment
+# '@' marks the header row, multiple header rows are allowed and will be active on the subsequent lines
+# This file is the database, and the script parses it but never removes anything from it, it only appends data and
+# modifies the line corresponding to today.
+# Settings such as working-hours and excess-as-overtime are saved from current date and onwards, it does not modify past
+# dates. Each new day copies over the settings from the previous day. Working periods are denoted by ranges with '-',
+# delimited by whitespace. The available settings are:
+# working-hours         - The normal working hours
+# excess-as-overtime    - Register the excess hours not towards flex bank but as overtime hours
+# round-minutes         - The number of minutes to round towards. Usually 15 or 30
+#
+# The flex bank is calculated from to the previous day, so each line copies the previous value and modifies it with the
+# previous day's work periods. It does not take into account the current day's work periods.
+#
+# Example usage:
+# $0 in                 # Checks in at the current date and timestamp
+# $0 in 8               # Checks in at 8 o'clock
+# $0 out                # Checks out at the current date and timestamp
+# $0 out 8              # Checks out at 8 o'clock
+# $0 break 12 1         # Breaks work periods at 12 o'clock and one hour forward (ie. one hour lunch break at 12)
+# $0 period 8-12        # Adds a new work period spanning 8 to 12
+# $0 note Sick leave    # Sets the note for today
+# $0 working-hours 8    # Changes the setting 'working-hours' to '8' for today onwards
+# $0 7                  # Prints a report on the last 7 days
+#
+# Example line:
+# @version; date;       working-hours; excess-as-overtime; periods;        note
+# 1;        2024-05-02; 8;             0;                  8.5-12 13-17.5; Anything out of the ordinary can be noted here, or used as a diary
+
+@version; date;       working-hours; excess-as-overtime; round-minutes; periods; note
