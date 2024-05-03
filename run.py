@@ -407,11 +407,10 @@ if __name__ == "__main__":
             current_timestamp = get_rounded_timestamp(float(args[0]), round_minutes)
 
         print(f"checking in at {current_timestamp}")
-        last_period = today_entry["periods"][-1]
-        if is_period_ended(last_period):
+        if not today_entry["periods"] or is_period_ended(today_entry["periods"][-1]):
             today_entry["periods"].append(f"{str(current_timestamp)}-")
         else:
-            print(f"error: a period is already active: {last_period}")
+            print(f"error: a period is already active: {today_entry['periods'][-1]}")
             sys.exit(1)
 
     elif command == "out":
@@ -420,13 +419,11 @@ if __name__ == "__main__":
             current_timestamp = get_rounded_timestamp(float(args[0]), round_minutes)
 
         print(f"checking out at {current_timestamp}")
-        last_period = today_entry["periods"][-1]
-        if not is_period_ended(last_period):
-            last_period = f"{last_period}{str(current_timestamp)}"
-            today_entry["periods"][-1] = last_period
+        if today_entry["periods"] and not is_period_ended(today_entry["periods"][-1]):
+            today_entry["periods"][-1] = f"{today_entry['periods'][-1]}{str(current_timestamp)}"
             assert_periods_are_valid(today_entry["periods"])
         else:
-            print("error: no active period")
+            print(f"error: no active period: {today_entry['periods']}")
             sys.exit(1)
 
     elif command == "break":
@@ -446,7 +443,7 @@ if __name__ == "__main__":
         print(f"adding period {rounded_period}")
         new_periods = today_entry["periods"].copy()
         # check if the last period is not ended
-        if not is_period_ended(new_periods[-1]):
+        if new_periods and not is_period_ended(new_periods[-1]):
             # end it temporarily at 24:00 so the assert will pass
             new_periods[-1] = f"{new_periods[-1].split('-')[0]}-24"
         new_periods.append(rounded_period)
