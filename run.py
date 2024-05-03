@@ -221,25 +221,23 @@ def read_report_card(full_file_path):
     return lines
 
 
+def usage(lines) -> str:
+    out = ""
+    for line in lines:
+        if line.startswith("#"):
+            line = line[1:].strip()
+            # replace $0 with the name of the script
+            line = line.replace("$0", sys.argv[0])
+            print(line)
+        else:
+            break
+    return out
+
+
 def parse_args(lines):
     # manually parse command line arguments using sys.argv
     import sys
-
     argv = sys.argv[1:]
-
-    # if no arguments are passed, print the usage and exit
-    if len(argv) == 0:
-        # print the first lines that starts with #, removing the leading # and trimming whitespace
-        for line in lines:
-            if line.startswith("#"):
-                line = line[1:].strip()
-                # replace $0 with the name of the script
-                line = line.replace("$0", sys.argv[0])
-                print(line)
-            else:
-                break
-        sys.exit(1)
-
     return argv
 
 
@@ -359,7 +357,7 @@ def print_report(lines, num_days):
             total = get_number_working_hours_from_days(work_week)
             bank = get_accumulative_flex_bank_up_to_date(lines, entry['date'])
             to_print = f"Week total hours: {total}, flex bank: {bank}"
-            print(f"{' ':<64}{to_print}\n")
+            print(f"{' ':<64}{to_print}")
 
 
 def assert_test(test, equal):
@@ -394,14 +392,19 @@ if __name__ == "__main__":
     today_entry = parse_line(lines[-1])
     round_minutes = today_entry["settings"]["round-minutes"]
     current_timestamp = get_rounded_timestamp_now(round_minutes)
-    # print(json.dumps(today_entry, indent=4))
-    # print(format_entry(today_entry))
 
     # parse the first argument as the command
-    command = argv[0]
+    if argv:
+        command = argv[0]
+    else:
+        command = "31"  # Print the last month by default
     args = argv[1:]
 
-    if command == "in":
+    if command == "help":
+        usage(lines)
+        sys.exit(0)
+
+    elif command == "in":
         check_number_args(args, [0, 1])
         if len(args) == 1:
             current_timestamp = get_rounded_timestamp(float(args[0]), round_minutes)

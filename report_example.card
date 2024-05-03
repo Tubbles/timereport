@@ -13,6 +13,7 @@
 # previous day's work periods. It does not take into account the current day's work periods.
 #
 # Example usage:
+# $0 help               # Print this help
 # $0 in                 # Checks in at the current date and timestamp
 # $0 in 8               # Checks in at 8 o'clock
 # $0 out                # Checks out at the current date and timestamp
@@ -22,6 +23,7 @@
 # $0 note Sick leave    # Sets the note for today
 # $0 working-hours 8    # Changes the setting 'working-hours' to '8' for today onwards
 # $0 7                  # Prints a report on the last 7 days
+# $0                    # Prints a report on the last 31 days
 #
 # Example line:
 # @version; date;       working-hours; excess-as-overtime; periods;        note
