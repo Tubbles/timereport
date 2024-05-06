@@ -399,6 +399,7 @@ if __name__ == "__main__":
     else:
         command = "31"  # Print the last month by default
     args = argv[1:]
+    rerun_argv = []
 
     if command == "help":
         usage(lines)
@@ -415,6 +416,8 @@ if __name__ == "__main__":
         else:
             print(f"error: a period is already active: {today_entry['periods'][-1]}")
             sys.exit(1)
+        rerun_argv = [sys.argv[0], "7"]
+        print()
 
     elif command == "out":
         check_number_args(args, [0, 1])
@@ -428,6 +431,8 @@ if __name__ == "__main__":
         else:
             print(f"error: no active period: {today_entry['periods']}")
             sys.exit(1)
+        rerun_argv = [sys.argv[0], "7"]
+        print()
 
     elif command == "break":
         print("error: not yet implemented")
@@ -460,6 +465,8 @@ if __name__ == "__main__":
             new_periods[-1] = f"{new_periods[-1].split('-')[0]}-"
 
         today_entry["periods"] = new_periods
+        rerun_argv = [sys.argv[0], "7"]
+        print()
 
     elif command == "note":
         print("error: not yet implemented")
@@ -484,3 +491,6 @@ if __name__ == "__main__":
     # write todays entry to the file
     with open(full_file_path, "a") as file:
         file.write(format_entry(today_entry, lines[-2]) + "\n")
+
+    if rerun_argv:
+        os.execv(rerun_argv[0], rerun_argv)
