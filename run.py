@@ -316,9 +316,9 @@ def pprint_entry(entry):
     print(f"w{week_number: <4}", end="")
     print(f"{weekday: <4}", end="")
     print(f"{entry['date']: <11}", end="")
-    print(f"{entry['settings']['working-hours']: <6}", end="")
-    print(f"{entry['settings']['excess-as-overtime']: <9}", end="")
-    to_print = f"{get_number_working_hours_right_now(entry)}"
+    print(f"{entry['settings']['working-hours']: <6g}", end="")
+    print(f"{entry['settings']['excess-as-overtime']: <9g}", end="")
+    to_print = f"{get_number_working_hours_right_now(entry):g}"
     if entry["periods"] and not is_period_ended(entry["periods"][-1]):
         to_print += "+"
     print(f"{to_print: <6}", end="")
@@ -356,7 +356,7 @@ def print_report(lines, num_days):
             work_week = get_list_of_entries_from_date_and_number_days_backwards(lines, entry["date"], weekday + 1)
             total = get_number_working_hours_from_days(work_week)
             bank = get_accumulative_flex_bank_up_to_date(lines, entry['date'])
-            to_print = f"Week total hours: {total}, flex bank: {bank}"
+            to_print = f"Week total hours: {total:g}, flex bank: {bank:g}"
             print(f"{' ':<64}{to_print}")
 
 
