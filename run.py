@@ -189,7 +189,7 @@ def fill_in_days_to_today(lines, full_file_path):
         entry = copy.deepcopy(last_entry)
         entry["date"] = (datetime.date.fromisoformat(last_entry["date"]) + datetime.timedelta(days=1)).isoformat()
 
-        # check if date is a saturday or a swedish financial holiday using the library holidays
+        # check if date is a saturday or a swedish holiday using the holidays library
         se_holidays = holidays.country_holidays("SE")
         if datetime.date.fromisoformat(entry["date"]).weekday() == 5 or entry["date"] in se_holidays:
             entry["settings"]["working-hours"] = 0
@@ -355,7 +355,7 @@ def print_report(lines, num_days):
         if weekday == 6 or day == num_days - 1:
             work_week = get_list_of_entries_from_date_and_number_days_backwards(lines, entry["date"], weekday + 1)
             total = get_number_working_hours_from_days(work_week)
-            bank = get_accumulative_flex_bank_up_to_date(lines, entry['date'])
+            bank = get_accumulative_flex_bank_up_to_date(lines, entry["date"])
             to_print = f"Week total hours: {total:g}, flex bank: {bank:g}"
             print(f"{' ':<64}{to_print}")
 
@@ -404,6 +404,22 @@ if __name__ == "__main__":
     if command == "help":
         usage(lines)
         sys.exit(0)
+
+    elif command == "edit":
+        import subprocess
+        import os
+        import platform
+        if platform.system() == "Darwin":
+            subprocess.call(("open", full_file_path))
+        elif platform.system() == "Windows":
+            os.startfile(full_file_path)
+        else:
+            import shutil
+            if shutil.which("xdg-open"):
+                subprocess.call(("xdg-open", full_file_path))
+            else:
+                editor = os.environ.get("EDITOR", "vi")
+                subprocess.call([editor, full_file_path])
 
     elif command == "in":
         check_number_args(args, [0, 1])

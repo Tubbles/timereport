@@ -14,6 +14,7 @@
 #
 # Example usage:
 # $0 help               # Print this help
+# $0 edit               # Open the report card for manual editing in $EDITOR
 # $0 in                 # Checks in at the current date and timestamp
 # $0 in 8               # Checks in at 8 o'clock
 # $0 out                # Checks out at the current date and timestamp
