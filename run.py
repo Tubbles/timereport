@@ -176,6 +176,19 @@ def get_list_of_entries_from_date_and_number_days_backwards(lines: list, date: s
     return entries
 
 
+def get_latest_nonzero_working_hours(lines):
+
+    lines = get_only_report_entries(lines)
+
+    for line in reversed(lines):
+        entry = parse_line(line)
+        if entry["settings"]["working-hours"] != 0:
+            return entry["settings"]["working-hours"]
+
+    # edge case
+    return 8
+
+
 def fill_in_days_to_today(lines, full_file_path):
     import copy
     import datetime
@@ -198,7 +211,7 @@ def fill_in_days_to_today(lines, full_file_path):
             except KeyError:
                 entry["note"] = "Saturday"
         else:
-            entry["settings"]["working-hours"] = 8
+            entry["settings"]["working-hours"] = get_latest_nonzero_working_hours(lines)
             entry["note"] = ""
 
         entry["periods"] = []
