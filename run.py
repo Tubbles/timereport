@@ -128,17 +128,17 @@ def get_rounded_timestamp_now(rounding_minutes: int) -> float:
     return get_rounded_timestamp(now.hour + now.minute / 60, rounding_minutes)
 
 
-def get_number_working_hours_right_now(today_entry):
+def get_number_working_hours_right_now(entry):
     # reads a list of periods of the format n-m, where n and m are floats representing the start and end of a period,
     # respectively
     # Also includes the current period if it is not ended, up until the current time
-    periods = today_entry["periods"].copy()
+    periods = entry["periods"].copy()
 
     if len(periods) == 0:
         return 0
 
     if not is_period_ended(periods[-1]):
-        round_minutes = today_entry["settings"]["round-minutes"]
+        round_minutes = entry["settings"]["round-minutes"]
         current_timestamp = get_rounded_timestamp_now(round_minutes)
 
         periods[-1] = f"{periods[-1].split('-')[0]}-{current_timestamp}"
@@ -189,6 +189,11 @@ def get_latest_nonzero_working_hours(lines):
     return 8
 
 
+def entry_is_today(entry):
+    import datetime
+    return entry["date"] == datetime.date.today().isoformat()
+
+
 def fill_in_days_to_today(lines, full_file_path):
     import copy
     import datetime
@@ -197,7 +202,7 @@ def fill_in_days_to_today(lines, full_file_path):
     # check the date of the last entry
     last_entry = parse_line(lines[-1])
     # if the date is not today, append the file with all dates from the last entry to today
-    while last_entry["date"] != datetime.date.today().isoformat():
+    while not entry_is_today(last_entry):
         # deep copy the last entry and update the date
         entry = copy.deepcopy(last_entry)
         entry["date"] = (datetime.date.fromisoformat(last_entry["date"]) + datetime.timedelta(days=1)).isoformat()
@@ -302,7 +307,7 @@ def get_only_report_entries(lines):
     return report_lines
 
 
-def get_accumulative_flex_bank_up_to_date(lines, date):
+def get_accumulative_flex_bank_up_to_date(lines, date, assume_full_day_today=False):
     flex_bank = 0
 
     lines = get_only_report_entries(lines)
@@ -311,9 +316,10 @@ def get_accumulative_flex_bank_up_to_date(lines, date):
         entry = parse_line(line)
         hours_worked = get_number_working_hours_right_now(entry)
 
-        flex_bank = (
-            flex_bank - entry["settings"]["working-hours"] + hours_worked
-        )
+        if assume_full_day_today and entry_is_today(entry):
+            hours_worked = max(hours_worked, entry["settings"]["working-hours"])
+
+        flex_bank = flex_bank - entry["settings"]["working-hours"] + hours_worked
 
         if entry["date"] == date:
             break
@@ -368,8 +374,11 @@ def print_report(lines, num_days):
         if weekday == 6 or day == num_days - 1:
             work_week = get_list_of_entries_from_date_and_number_days_backwards(lines, entry["date"], weekday + 1)
             total = get_number_working_hours_from_days(work_week)
-            bank = get_accumulative_flex_bank_up_to_date(lines, entry["date"])
+            bank = get_accumulative_flex_bank_up_to_date(lines, entry["date"], assume_full_day_today=True)
+            bank_inc_today = get_accumulative_flex_bank_up_to_date(lines, entry["date"], assume_full_day_today=False)
             to_print = f"Week total hours: {total:g}, flex bank: {bank:g}"
+            if bank != bank_inc_today:
+                to_print += f"({bank_inc_today:g})"
             print(f"{' ':<64}{to_print}")
 
 
