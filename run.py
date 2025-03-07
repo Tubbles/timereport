@@ -2,13 +2,16 @@
 # -*- coding: utf-8 -*-
 
 
+NOT_AVAILABLE = -1
+
+
 def new_entry():
     entry = {
         "version": 0,
         "date": "today",
         "settings": {
-            "working-hours": 0,
-            "excess-as-overtime": 0,
+            "working-hours": 0,  # Hours supposed to work this day. Set to 0 for eg. sick leave
+            "working-hours-standard": 0,  # Hours supposed to work. Intended to be copied over from previous day
             "round-minutes": 0,
         },
         "periods": [],
@@ -54,10 +57,17 @@ def parse_line(line: str) -> dict:
     entry["version"] = int(parts[0].strip())
     if entry["version"] == 1:
         # read in v1
-        # parse usign datetime
         entry["date"] = parts[1].strip()
         entry["settings"]["working-hours"] = float(parts[2].strip())
-        entry["settings"]["excess-as-overtime"] = int(parts[3].strip())
+        entry["settings"]["working-hours-standard"] = NOT_AVAILABLE
+        entry["settings"]["round-minutes"] = int(parts[3].strip())
+        entry["periods"] = parts[4].replace(",", " ").split()
+        entry["note"] = ";".join(parts[5:]).strip()
+    elif entry["version"] == 2:
+        # read in v2
+        entry["date"] = parts[1].strip()
+        entry["settings"]["working-hours"] = float(parts[2].strip())
+        entry["settings"]["working-hours-standard"] = float(parts[3].strip())
         entry["settings"]["round-minutes"] = int(parts[4].strip())
         entry["periods"] = parts[5].replace(",", " ").split()
         entry["note"] = ";".join(parts[6:]).strip()
@@ -94,17 +104,14 @@ def format_period(period: str) -> str:
 
 def format_entry(entry: dict, alignment_line: str | None = None) -> str:
     line = ""
-    if entry["version"] == 1:
-        line += align_column(f"{entry['version']};", line, alignment_line)
-        line += align_column(f"{entry['date']};", line, alignment_line)
-        line += align_column(f"{entry['settings']['working-hours']:g};", line, alignment_line)
-        line += align_column(f"{entry['settings']['excess-as-overtime']};", line, alignment_line)
-        line += align_column(f"{entry['settings']['round-minutes']};", line, alignment_line)
-        periods = [format_period(period) for period in entry["periods"]]
-        line += align_column(f"{', '.join(periods)};", line, alignment_line)
-        line += align_column(f"{entry['note']}", line, alignment_line)
-    else:
-        raise ValueError("Unsupported version")
+    line += align_column(f"{entry['version']};", line, alignment_line)
+    line += align_column(f"{entry['date']};", line, alignment_line)
+    line += align_column(f"{entry['settings']['working-hours']:g};", line, alignment_line)
+    line += align_column(f"{entry['settings']['working-hours-standard']:g};", line, alignment_line)
+    line += align_column(f"{entry['settings']['round-minutes']};", line, alignment_line)
+    periods = [format_period(period) for period in entry["periods"]]
+    line += align_column(f"{', '.join(periods)};", line, alignment_line)
+    line += align_column(f"{entry['note']}", line, alignment_line)
 
     return line
 
@@ -205,6 +212,15 @@ def fill_in_days_to_today(lines, full_file_path):
     while not entry_is_today(last_entry):
         # deep copy the last entry and update the date
         entry = copy.deepcopy(last_entry)
+        entry["version"] = 2
+        if last_entry["version"] == 1:
+            pass
+            entry["settings"]["working-hours-standard"] = last_entry["settings"]["working-hours"]
+        elif last_entry["version"] == 2:
+            entry["settings"]["working-hours"] = entry["settings"]["working-hours-standard"]
+        else:
+            raise ValueError("Unsupported version")
+
         entry["date"] = (datetime.date.fromisoformat(last_entry["date"]) + datetime.timedelta(days=1)).isoformat()
 
         # check if date is a saturday or a swedish holiday using the holidays library
@@ -336,7 +352,10 @@ def pprint_entry(entry):
     print(f"{weekday: <4}", end="")
     print(f"{entry['date']: <11}", end="")
     print(f"{entry['settings']['working-hours']: <6g}", end="")
-    print(f"{entry['settings']['excess-as-overtime']: <9g}", end="")
+    if entry['settings']['working-hours-standard'] == NOT_AVAILABLE:
+        print(f"{' ': <9}", end="")
+    else:
+        print(f"{entry['settings']['working-hours-standard']: <9g}", end="")
     to_print = f"{get_number_working_hours_right_now(entry):g}"
     if entry["periods"] and not is_period_ended(entry["periods"][-1]):
         to_print += "+"
@@ -360,7 +379,7 @@ def print_report(lines, num_days):
     print(f"{'Day': <4}", end="")
     print(f"{'Date': <11}", end="")
     print(f"{'Hours': <6}", end="")
-    print(f"{'Overtime': <9}", end="")
+    print(f"{'Standard': <9}", end="")
     print(f"{'Total': <6}", end="")
     print(f"{'Periods': <22} ", end="")
     print(f"{'Note': <0}")
@@ -510,9 +529,6 @@ if __name__ == "__main__":
         print("error: not yet implemented")
         sys.exit(1)
     elif command == "working-hours":
-        print("error: not yet implemented")
-        sys.exit(1)
-    elif command == "excess-as-overtime":
         print("error: not yet implemented")
         sys.exit(1)
     elif command == "round-minutes":
