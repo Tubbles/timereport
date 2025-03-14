@@ -163,6 +163,16 @@ def get_number_working_hours_from_days(entries: list):
     return total
 
 
+def get_number_supposed_working_hours_from_days(entries: list):
+    # reads a list of entries and returns the total number of working hours
+    total = 0
+
+    for entry in entries:
+        total += entry["settings"]["working-hours"]
+
+    return total
+
+
 def get_list_of_entries_from_date_and_number_days_backwards(lines: list, date: str, num_days: int):
     # reads a list of entries and returns a list of entries starting from the date and going num_days back
     entries = []
@@ -393,11 +403,21 @@ def print_report(lines, num_days):
         if weekday == 6 or day == num_days - 1:
             work_week = get_list_of_entries_from_date_and_number_days_backwards(lines, entry["date"], weekday + 1)
             total = get_number_working_hours_from_days(work_week)
+            supposed = get_number_supposed_working_hours_from_days(work_week)
+            to_print = f"Week total hours: {total:g}/{supposed:g}({total-supposed:g}), "
+
             bank = get_accumulative_flex_bank_up_to_date(lines, entry["date"], assume_full_day_today=True)
             bank_inc_today = get_accumulative_flex_bank_up_to_date(lines, entry["date"], assume_full_day_today=False)
-            to_print = f"Week total hours: {total:g}, flex bank: {bank:g}"
-            if bank != bank_inc_today:
-                to_print += f"({bank_inc_today:g})"
+
+            bank_differs_today = bank != bank_inc_today
+            last_period_ended = len(entry["periods"]) and is_period_ended(entry["periods"][-1])
+
+            if last_period_ended:
+                to_print += f"flex bank: {bank_inc_today:g}"
+            elif bank_differs_today:
+                to_print += f"flex bank: {bank:g}({bank_inc_today:g})"
+            else:
+                to_print += f"flex bank: {bank:g}"
             print(f"{' ':<64}{to_print}")
 
 
@@ -411,6 +431,8 @@ def test():
     assert_test(get_rounded_timestamp(8.20, 15), 8.25)
     assert_test(get_rounded_timestamp(8.74, 30), 8.5)
     assert_test(get_rounded_timestamp(8.75, 30), 9)
+    for minute in range(60 + 1):
+        assert_test(get_rounded_timestamp(minute, 1), minute)
     assert_test(is_period_ended("12-13"), True)
     assert_test(is_period_ended("12-"), False)
     print("All tests passed")
