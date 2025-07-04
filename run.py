@@ -362,15 +362,15 @@ def pprint_entry(entry):
     print(f"{weekday: <4}", end="")
     print(f"{entry['date']: <11}", end="")
     print(f"{entry['settings']['working-hours']: <6g}", end="")
-    if entry['settings']['working-hours-standard'] == NOT_AVAILABLE:
-        print(f"{' ': <9}", end="")
-    else:
-        print(f"{entry['settings']['working-hours-standard']: <9g}", end="")
+    # if entry['settings']['working-hours-standard'] == NOT_AVAILABLE:
+    #     print(f"{' ': <9}", end="")
+    # else:
+    #     print(f"{entry['settings']['working-hours-standard']: <9g}", end="")
+    print(f"{', '.join(entry['periods']): <22} ", end="")
     to_print = f"{get_number_working_hours_right_now(entry):g}"
     if entry["periods"] and not is_period_ended(entry["periods"][-1]):
         to_print += "+"
-    print(f"{to_print: <6}", end="")
-    print(f"{', '.join(entry['periods']): <22} ", end="")
+    print(f"{to_print: <5}", end="")
     print(f"{entry['note']: <0}")
 
 
@@ -389,9 +389,9 @@ def print_report(lines, num_days):
     print(f"{'Day': <4}", end="")
     print(f"{'Date': <11}", end="")
     print(f"{'Hours': <6}", end="")
-    print(f"{'Standard': <9}", end="")
-    print(f"{'Total': <6}", end="")
+    # print(f"{'Standard': <9}", end="")
     print(f"{'Periods': <22} ", end="")
+    print(f"{'Sum': <5}", end="")
     print(f"{'Note': <0}")
     for day in range(num_days):
         entry = parse_line(lines[range_start + day])
@@ -516,7 +516,6 @@ if __name__ == "__main__":
     elif command == "break":
         print("error: not yet implemented")
         sys.exit(1)
-        check_number_args(args, [2])
 
     elif command == "period":
         check_number_args(args, [1])
