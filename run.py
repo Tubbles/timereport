@@ -366,8 +366,8 @@ def pprint_entry(entry):
     #     print(f"{' ': <9}", end="")
     # else:
     #     print(f"{entry['settings']['working-hours-standard']: <9g}", end="")
-    print(f"{', '.join(entry['periods']): <22} ", end="")
-    to_print = f"{get_number_working_hours_right_now(entry):g}"
+    print(f"{', '.join(entry['periods']): <24} ", end="")
+    to_print = f"{get_number_working_hours_right_now(entry):.2g}"
     if entry["periods"] and not is_period_ended(entry["periods"][-1]):
         to_print += "+"
     print(f"{to_print: <5}", end="")
@@ -390,7 +390,7 @@ def print_report(lines, num_days):
     print(f"{'Date': <11}", end="")
     print(f"{'Hours': <6}", end="")
     # print(f"{'Standard': <9}", end="")
-    print(f"{'Periods': <22} ", end="")
+    print(f"{'Periods': <24} ", end="")
     print(f"{'Sum': <5}", end="")
     print(f"{'Note': <0}")
     for day in range(num_days):
@@ -404,7 +404,7 @@ def print_report(lines, num_days):
             work_week = get_list_of_entries_from_date_and_number_days_backwards(lines, entry["date"], weekday + 1)
             total = get_number_working_hours_from_days(work_week)
             supposed = get_number_supposed_working_hours_from_days(work_week)
-            to_print = f"Week total hours: {total:g}/{supposed:g}({total-supposed:g}), "
+            to_print = f"Week total hours: {total:.2g}/{supposed:.2g}({total-supposed:.2g}), "
 
             bank = get_accumulative_flex_bank_up_to_date(lines, entry["date"], assume_full_day_today=True)
             bank_inc_today = get_accumulative_flex_bank_up_to_date(lines, entry["date"], assume_full_day_today=False)
@@ -413,11 +413,11 @@ def print_report(lines, num_days):
             last_period_ended = len(entry["periods"]) and is_period_ended(entry["periods"][-1])
 
             if last_period_ended:
-                to_print += f"flex bank: {bank_inc_today:g}"
+                to_print += f"flex bank: {bank_inc_today:.2g}"
             elif bank_differs_today:
-                to_print += f"flex bank: {bank:g}({bank_inc_today:g})"
+                to_print += f"flex bank: {bank:.2g}({bank_inc_today:.2g})"
             else:
-                to_print += f"flex bank: {bank:g}"
+                to_print += f"flex bank: {bank:.2g}"
             print(f"{' ':<64}{to_print}")
 
 
@@ -489,7 +489,7 @@ if __name__ == "__main__":
         if len(args) == 1:
             current_timestamp = get_rounded_timestamp(float(args[0]), round_minutes)
 
-        print(f"checking in at {current_timestamp}")
+        print(f"checking in at {current_timestamp:.2f}")
         if not today_entry["periods"] or is_period_ended(today_entry["periods"][-1]):
             today_entry["periods"].append(f"{str(current_timestamp)}-")
         else:
@@ -503,7 +503,7 @@ if __name__ == "__main__":
         if len(args) == 1:
             current_timestamp = get_rounded_timestamp(float(args[0]), round_minutes)
 
-        print(f"checking out at {current_timestamp}")
+        print(f"checking out at {current_timestamp:.2f}")
         if today_entry["periods"] and not is_period_ended(today_entry["periods"][-1]):
             today_entry["periods"][-1] = f"{today_entry['periods'][-1]}{str(current_timestamp)}"
             assert_periods_are_valid(today_entry["periods"])
