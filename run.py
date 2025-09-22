@@ -5,6 +5,24 @@
 NOT_AVAILABLE = -1
 
 
+def hours_to_string(hours: float, round_minutes: float):
+    negative = ""
+    if hours < 0:
+        negative = "-"
+        hours = -hours
+    hour = int(hours)
+    minutes = (hours - hour) * 60
+    rounded_minutes = round(minutes / round_minutes) * round_minutes
+    if rounded_minutes == 60:
+        rounded_minutes = 0
+        hour += 1
+    if hour == 24:
+        hour = 0
+    if rounded_minutes != 0:
+        return f"{negative}{hour}:{rounded_minutes:02d}"
+    return f"{negative}{hour}"
+
+
 def new_entry():
     entry = {
         "version": 0,
@@ -22,6 +40,13 @@ def new_entry():
 
 def is_period_ended(period: str):
     return len(period.split("-")) == 2 and period.split("-")[0] != "" and period.split("-")[1] != ""
+
+
+def period_to_string(period: str, round_minutes: float):
+    parts = period.split("-")
+    if is_period_ended(period):
+        return f"{hours_to_string(float(parts[0]), round_minutes)}-{hours_to_string(float(parts[1]), round_minutes)}"
+    return f"{hours_to_string(float(parts[0]), round_minutes)}-"
 
 
 def assert_periods_are_valid(periods: list):
@@ -366,8 +391,8 @@ def pprint_entry(entry):
     #     print(f"{' ': <9}", end="")
     # else:
     #     print(f"{entry['settings']['working-hours-standard']: <9g}", end="")
-    print(f"{', '.join(entry['periods']): <24} ", end="")
-    to_print = f"{get_number_working_hours_right_now(entry):.2g}"
+    print(f"{', '.join([period_to_string(period, entry['settings']['round-minutes']) for period in entry['periods']]): <32} ", end="")
+    to_print = f"{hours_to_string(get_number_working_hours_right_now(entry), entry['settings']['round-minutes'])}"
     if entry["periods"] and not is_period_ended(entry["periods"][-1]):
         to_print += "+"
     print(f"{to_print: <5}", end="")
@@ -390,11 +415,12 @@ def print_report(lines, num_days):
     print(f"{'Date': <11}", end="")
     print(f"{'Hours': <6}", end="")
     # print(f"{'Standard': <9}", end="")
-    print(f"{'Periods': <24} ", end="")
+    print(f"{'Periods': <32} ", end="")
     print(f"{'Sum': <5}", end="")
     print(f"{'Note': <0}")
     for day in range(num_days):
         entry = parse_line(lines[range_start + day])
+        round_minutes = entry['settings']['round-minutes']
         pprint_entry(entry)
 
         # after printing sunday (or the last day), print the total working hours for that week along with accumulated
@@ -404,7 +430,7 @@ def print_report(lines, num_days):
             work_week = get_list_of_entries_from_date_and_number_days_backwards(lines, entry["date"], weekday + 1)
             total = get_number_working_hours_from_days(work_week)
             supposed = get_number_supposed_working_hours_from_days(work_week)
-            to_print = f"Week total hours: {total:.2g}/{supposed:.2g}({total-supposed:.2g}), "
+            to_print = f"Week total hours: {hours_to_string(total, round_minutes)}/{hours_to_string(supposed, round_minutes)}({hours_to_string(total-supposed, round_minutes)}), "
 
             bank = get_accumulative_flex_bank_up_to_date(lines, entry["date"], assume_full_day_today=True)
             bank_inc_today = get_accumulative_flex_bank_up_to_date(lines, entry["date"], assume_full_day_today=False)
@@ -413,11 +439,11 @@ def print_report(lines, num_days):
             last_period_ended = len(entry["periods"]) and is_period_ended(entry["periods"][-1])
 
             if last_period_ended:
-                to_print += f"flex bank: {bank_inc_today:.2g}"
+                to_print += f"flex bank: {hours_to_string(bank_inc_today, round_minutes)}"
             elif bank_differs_today:
-                to_print += f"flex bank: {bank:.2g}({bank_inc_today:.2g})"
+                to_print += f"flex bank: {hours_to_string(bank, round_minutes)}({hours_to_string(bank_inc_today, round_minutes)})"
             else:
-                to_print += f"flex bank: {bank:.2g}"
+                to_print += f"flex bank: {hours_to_string(bank, round_minutes)}"
             print(f"{' ':<64}{to_print}")
 
 
