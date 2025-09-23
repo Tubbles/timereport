@@ -5,6 +5,13 @@
 NOT_AVAILABLE = -1
 
 
+def timestamp_from_string(timestamp: str):
+    parts = timestamp.split(":")
+    hours = float(parts[0])
+    minutes = float(parts[1])
+    return hours + minutes / 60
+
+
 def hours_to_string(hours: float, round_minutes: float):
     negative = ""
     if hours < 0:
@@ -147,11 +154,15 @@ def get_number_working_hours_from_periods(periods):
     return sum([float(period.split("-")[1]) - float(period.split("-")[0]) for period in periods])
 
 
-def get_rounded_timestamp(timestamp: float, rounding_minutes: int) -> float:
-    # timestamp is in hours, rounding_minutes is in minutes
+def get_rounded_timestamp(timestamp: float|str, rounding_minutes: int) -> float:
+    # timestamp is in hours or str eg. "8:30", rounding_minutes is in minutes
+
+    # check if ":" is present
+    if isinstance(timestamp, str) and ":" in timestamp:
+        timestamp = timestamp_from_string(timestamp)
 
     # convert the timestamp to minutes
-    return round(timestamp * 60 / rounding_minutes) * rounding_minutes / 60
+    return round(float(timestamp) * 60 / rounding_minutes) * rounding_minutes / 60
 
 
 def get_rounded_timestamp_now(rounding_minutes: int) -> float:
@@ -459,6 +470,8 @@ def test():
     assert_test(get_rounded_timestamp(8.75, 30), 9)
     for minute in range(60 + 1):
         assert_test(get_rounded_timestamp(minute, 1), minute)
+    assert_test(timestamp_from_string("4:30"), 4.5)
+    assert_test(timestamp_from_string("8:20"), 8 + 1/3)
     assert_test(is_period_ended("12-13"), True)
     assert_test(is_period_ended("12-"), False)
     print("All tests passed")
@@ -513,7 +526,7 @@ if __name__ == "__main__":
     elif command == "in":
         check_number_args(args, [0, 1])
         if len(args) == 1:
-            current_timestamp = get_rounded_timestamp(float(args[0]), round_minutes)
+            current_timestamp = get_rounded_timestamp(args[0], round_minutes)
 
         print(f"checking in at {current_timestamp:.2f}")
         if not today_entry["periods"] or is_period_ended(today_entry["periods"][-1]):
@@ -527,7 +540,7 @@ if __name__ == "__main__":
     elif command == "out":
         check_number_args(args, [0, 1])
         if len(args) == 1:
-            current_timestamp = get_rounded_timestamp(float(args[0]), round_minutes)
+            current_timestamp = get_rounded_timestamp(args[0], round_minutes)
 
         print(f"checking out at {current_timestamp:.2f}")
         if today_entry["periods"] and not is_period_ended(today_entry["periods"][-1]):
