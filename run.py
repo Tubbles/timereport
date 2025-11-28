@@ -260,7 +260,6 @@ def fill_in_days_to_today(lines, full_file_path):
         entry = copy.deepcopy(last_entry)
         entry["version"] = 2
         if last_entry["version"] == 1:
-            pass
             entry["settings"]["working-hours-standard"] = last_entry["settings"]["working-hours"]
         elif last_entry["version"] == 2:
             entry["settings"]["working-hours"] = entry["settings"]["working-hours-standard"]
@@ -404,6 +403,8 @@ def pprint_entry(entry):
     #     print(f"{entry['settings']['working-hours-standard']: <9g}", end="")
     print(f"{', '.join([period_to_string(period, entry['settings']['round-minutes']) for period in entry['periods']]): <32} ", end="")
     to_print = f"{hours_to_string(get_number_working_hours_right_now(entry), entry['settings']['round-minutes'])}"
+    if entry["settings"]["working-hours"] != entry["settings"]["working-hours-standard"] and entry["settings"]["working-hours"] != 0:
+        to_print += f"/{entry['settings']['working-hours']}"
     if entry["periods"] and not is_period_ended(entry["periods"][-1]):
         to_print += "+"
     print(f"{to_print: <5}", end="")
