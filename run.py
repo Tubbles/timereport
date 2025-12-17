@@ -12,7 +12,7 @@ def timestamp_from_string(timestamp: str):
     return hours + minutes / 60
 
 
-def hours_to_string(hours: float, round_minutes: float):
+def hours_to_string(hours: float, round_minutes: float, modulus: bool = True):
     negative = ""
     if hours < 0:
         negative = "-"
@@ -23,7 +23,7 @@ def hours_to_string(hours: float, round_minutes: float):
     if rounded_minutes == 60:
         rounded_minutes = 0
         hour += 1
-    if hour == 24:
+    if hour == 24 and modulus:
         hour = 0
     if rounded_minutes != 0:
         return f"{negative}{hour}:{rounded_minutes:02d}"
@@ -442,7 +442,7 @@ def print_report(lines, num_days):
             work_week = get_list_of_entries_from_date_and_number_days_backwards(lines, entry["date"], weekday + 1)
             total = get_number_working_hours_from_days(work_week)
             supposed = get_number_supposed_working_hours_from_days(work_week)
-            to_print = f"Week total hours: {hours_to_string(total, round_minutes)}/{hours_to_string(supposed, round_minutes)}({hours_to_string(total-supposed, round_minutes)}), "
+            to_print = f"Week total hours: {hours_to_string(total, round_minutes, modulus=False)}/{hours_to_string(supposed, round_minutes, modulus=False)}({hours_to_string(total-supposed, round_minutes, modulus=False)}), "
 
             bank = get_accumulative_flex_bank_up_to_date(lines, entry["date"], assume_full_day_today=True)
             bank_inc_today = get_accumulative_flex_bank_up_to_date(lines, entry["date"], assume_full_day_today=False)
