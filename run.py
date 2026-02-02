@@ -459,6 +459,23 @@ def print_report(lines, num_days):
             print(f"{' ':<64}{to_print}")
 
 
+def checkin(today_entry, current_timestamp):
+    if not today_entry["periods"] or is_period_ended(today_entry["periods"][-1]):
+        today_entry["periods"].append(f"{str(current_timestamp)}-")
+    else:
+        print(f"error: a period is already active: {today_entry['periods'][-1]}")
+        sys.exit(1)
+
+
+def checkout(today_entry, current_timestamp):
+    if today_entry["periods"] and not is_period_ended(today_entry["periods"][-1]):
+        today_entry["periods"][-1] = f"{today_entry['periods'][-1]}{str(current_timestamp)}"
+        assert_periods_are_valid(today_entry["periods"])
+    else:
+        print(f"error: no active period: {today_entry['periods']}")
+        sys.exit(1)
+
+
 def assert_test(test, equal):
     print(f"{test} == {equal}")
     assert test == equal
@@ -530,11 +547,7 @@ if __name__ == "__main__":
             current_timestamp = get_rounded_timestamp(args[0], round_minutes)
 
         print(f"checking in at {current_timestamp:.2f}")
-        if not today_entry["periods"] or is_period_ended(today_entry["periods"][-1]):
-            today_entry["periods"].append(f"{str(current_timestamp)}-")
-        else:
-            print(f"error: a period is already active: {today_entry['periods'][-1]}")
-            sys.exit(1)
+        checkin(today_entry, current_timestamp)
         rerun_argv = [sys.argv[0], "7"]
         print()
 
@@ -544,18 +557,28 @@ if __name__ == "__main__":
             current_timestamp = get_rounded_timestamp(args[0], round_minutes)
 
         print(f"checking out at {current_timestamp:.2f}")
-        if today_entry["periods"] and not is_period_ended(today_entry["periods"][-1]):
-            today_entry["periods"][-1] = f"{today_entry['periods'][-1]}{str(current_timestamp)}"
-            assert_periods_are_valid(today_entry["periods"])
-        else:
-            print(f"error: no active period: {today_entry['periods']}")
-            sys.exit(1)
+        checkout(today_entry, current_timestamp)
         rerun_argv = [sys.argv[0], "7"]
         print()
 
     elif command == "break":
-        print("error: not yet implemented")
-        sys.exit(1)
+        # Takes a duration in minutes, and optionally a "check out time" when the break started
+        check_number_args(args, [1, 2])
+        hours = float(args[0]) / 60
+        checkout_timestamp = current_timestamp - hours
+
+        if len(args) == 2:
+            checkout_timestamp = get_rounded_timestamp(args[1], round_minutes)
+
+        print(f"checking out at {checkout_timestamp:.2f}")
+        checkout(today_entry, checkout_timestamp)
+
+        checkin_timestamp = checkout_timestamp + hours
+        print(f"checking in at {checkin_timestamp:.2f}")
+        checkin(today_entry, checkin_timestamp)
+
+        rerun_argv = [sys.argv[0], "7"]
+        print()
 
     elif command == "period":
         check_number_args(args, [1])
