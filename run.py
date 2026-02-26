@@ -521,7 +521,7 @@ if __name__ == "__main__":
     args = argv[1:]
     rerun_argv = []
 
-    if command == "help":
+    if command == "help" or command == "--help" or command == "-h":
         usage(lines)
         sys.exit(0)
 
