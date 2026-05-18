@@ -28,7 +28,7 @@
 # $0                    # Prints a report on the last 31 days
 #
 # Example line:
-# @version; date;       working-hours; excess-as-overtime; periods;        note
-# 1;        2024-05-02; 8;             0;                  8.5-12 13-17.5; Anything out of the ordinary can be noted here, or used as a diary
+# @version; date;       working-hours; working-hours-standard; round-minutes; periods; note
+# 2;        2026-05-10; 8;             8; 15;                 ; Anything out of the ordinary can be noted here, or used as a diary
 
-@version; date;       working-hours; excess-as-overtime; round-minutes; periods; note
+@version; date;       working-hours; working-hours-standard; round-minutes; periods; note

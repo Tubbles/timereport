@@ -529,7 +529,11 @@ if __name__ == "__main__":
         import subprocess
         import os
         import platform
-        if platform.system() == "Darwin":
+        if editor := os.environ.get("EDITOR"):
+            subprocess.call([editor, full_file_path])
+        elif visual := os.environ.get("VISUAL"):
+            subprocess.call([visual, full_file_path])
+        elif platform.system() == "Darwin":
             subprocess.call(("open", full_file_path))
         elif platform.system() == "Windows":
             os.startfile(full_file_path)
@@ -537,9 +541,9 @@ if __name__ == "__main__":
             import shutil
             if shutil.which("xdg-open"):
                 subprocess.call(("xdg-open", full_file_path))
-            else:
-                editor = os.environ.get("EDITOR", "vi")
-                subprocess.call([editor, full_file_path])
+
+        print("error: no editor found")
+        sys.exit(1)
 
     elif command == "in":
         check_number_args(args, [0, 1])
